@@ -1,13 +1,12 @@
 // services/PuntuacionesService.js
 class PuntuacionesService {
     constructor() {
-        // URL del backend
-        this.apiUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/puntuaciones'
-            : 'https://boom-blast-api.onrender.com/api/puntuaciones';
-        
-        console.log('🏆 PuntuacionesService inicializado:', this.apiUrl);
-    }
+    this.apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api/puntuaciones'
+        : 'https://boomblast.onrender.com/api/puntuaciones';
+    
+    console.log('🏆 PuntuacionesService inicializado:', this.apiUrl);
+}
 
     /**
      * Guardar puntuación en la base de datos
