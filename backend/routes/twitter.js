@@ -2,18 +2,49 @@ const express = require('express');
 const { TwitterApi } = require('twitter-api-v2');
 const router = express.Router();
 
-// Inicializar cliente de Twitter
-const twitterClient = new TwitterApi({
-  appKey: process.env.TWITTER_API_KEY,
-  appSecret: process.env.TWITTER_API_SECRET,
-  accessToken: process.env.TWITTER_ACCESS_TOKEN,
-  accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
-});
+// Función para verificar si las credenciales de Twitter están configuradas
+function hasTwitterCredentials() {
+  return !!(
+    process.env.TWITTER_API_KEY &&
+    process.env.TWITTER_API_SECRET &&
+    process.env.TWITTER_ACCESS_TOKEN &&
+    process.env.TWITTER_ACCESS_TOKEN_SECRET
+  );
+}
 
-const rwClient = twitterClient.readWrite;
+// Inicializar cliente de Twitter solo si hay credenciales
+let rwClient = null;
+
+if (hasTwitterCredentials()) {
+  try {
+    const twitterClient = new TwitterApi({
+      appKey: process.env.TWITTER_API_KEY,
+      appSecret: process.env.TWITTER_API_SECRET,
+      accessToken: process.env.TWITTER_ACCESS_TOKEN,
+      accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+    });
+    rwClient = twitterClient.readWrite;
+    console.log('✅ Cliente de Twitter inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando Twitter:', error.message);
+  }
+} else {
+  console.warn('⚠️ Credenciales de Twitter no configuradas. Las rutas de Twitter no funcionarán.');
+}
+
+// Middleware para verificar que Twitter esté configurado
+function requireTwitter(req, res, next) {
+  if (!rwClient) {
+    return res.status(503).json({
+      success: false,
+      error: 'Servicio de Twitter no configurado. Por favor, configura las credenciales de Twitter.'
+    });
+  }
+  next();
+}
 
 // POST: Compartir resultado de partida
-router.post('/compartir', async (req, res) => {
+router.post('/compartir', requireTwitter, async (req, res) => {
   try {
     const { ganador, perdedor, rondasGanadas, tiempo, mapa, logros } = req.body;
     
@@ -64,7 +95,7 @@ router.post('/compartir', async (req, res) => {
 });
 
 // GET: Obtener feed público de partidas
-router.get('/feed', async (req, res) => {
+router.get('/feed', requireTwitter, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
     
@@ -98,7 +129,7 @@ router.get('/feed', async (req, res) => {
 });
 
 // GET: Estadísticas globales
-router.get('/estadisticas', async (req, res) => {
+router.get('/estadisticas', requireTwitter, async (req, res) => {
   try {
     const tweets = await rwClient.v2.search({
       query: '#BoomBlast -is:retweet',
