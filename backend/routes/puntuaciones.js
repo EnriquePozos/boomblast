@@ -2,10 +2,48 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 
-// GET: Top puntuaciones
-router.get('/top/:limit?', async (req, res) => {
+// GET: Top puntuaciones (sin el ?)
+router.get('/top/:limit', async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.params.limit) || 10, 100);
+    
+    const result = await db.query(
+      `SELECT 
+        id, 
+        jugador, 
+        puntos, 
+        tiempo, 
+        dificultad, 
+        mapa,
+        fecha,
+        ROW_NUMBER() OVER (ORDER BY puntos DESC) as posicion
+      FROM puntuaciones 
+      ORDER BY puntos DESC 
+      LIMIT $1`,
+      [limit]
+    );
+    
+    console.log(`✅ ${result.rows.length} puntuaciones recuperadas`);
+    
+    res.json({ 
+      success: true, 
+      puntuaciones: result.rows,
+      total: result.rows.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error al obtener puntuaciones:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// GET: Top puntuaciones sin límite (por defecto 10)
+router.get('/top', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 10, 100);
     
     const result = await db.query(
       `SELECT 
