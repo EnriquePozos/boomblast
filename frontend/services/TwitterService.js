@@ -1,15 +1,12 @@
 // services/TwitterService.js
 class TwitterService {
-    constructor() {
-        // URL del backend
-        // Para desarrollo local: 'http://localhost:3000/api/twitter'
-        // Para producción: cambiar a tu URL de Render
-        this.apiUrl = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api/twitter'
-            : 'https://boom-blast-api.onrender.com/api/twitter';
-        
-        console.log('🐦 TwitterService inicializado:', this.apiUrl);
-    }
+constructor() {
+    this.apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api/twitter'
+        : 'https://boomblast.onrender.com/api/twitter';
+    
+    console.log('🐦 TwitterService inicializado:', this.apiUrl);
+}
 
     /**
      * Compartir resultado de partida en Twitter
